@@ -5,7 +5,7 @@ from langchain_core.messages import HumanMessage, AIMessage
 import os
 
 load_dotenv()  # Loads .env file
-api_key = os.getenv("API_KEY")
+api_key = st.secrets["GROQ_API_KEY"]
 
 llm = ChatGroq(
     api_key=api_key,
