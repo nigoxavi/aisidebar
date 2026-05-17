@@ -1,5 +1,6 @@
 import streamlit as st
 from pymongo import MongoClient
+import certifi
 from dotenv import load_dotenv
 from langchain_groq import ChatGroq
 from langchain_core.messages import HumanMessage, AIMessage
@@ -24,15 +25,32 @@ st.write(
 )
 
 # ---------------- MONGODB ----------------
+from pymongo import MongoClient
+import certifi
+import streamlit as st
 
 MONGO_URI = st.secrets["MONGO_URI"]
 
-client = MongoClient(MONGO_URI)
+try:
+    client = MongoClient(
+        MONGO_URI,
+        tls=True,
+        tlsCAFile=certifi.where(),
+        serverSelectionTimeoutMS=30000
+    )
 
-db = client["aidatabase1"]
+    # Force connection test (VERY IMPORTANT)
+    client.admin.command("ping")
 
-collection = db["search_history"]
+    db = client["aidatabase1"]
+    collection = db["search_history"]
 
+   # st.success("✅ MongoDB Connected Successfully!")
+
+except Exception as e:
+    st.error("❌ MongoDB Connection Failed")
+    st.exception(e)
+# ---------------- MONGODB ----------------
 # ---------------- SESSION STATE ----------------
 
 if "messages" not in st.session_state:
