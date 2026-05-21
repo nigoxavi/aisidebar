@@ -160,3 +160,34 @@ if user_input:
         except Exception as e:
 
             st.error(f"Error: {e}")
+ 
+#..........bring delete button in the botton............
+st.sidebar.markdown("<br>" * 25, unsafe_allow_html=True)
+
+# CLEAR HISTORY BUTTON AT BOTTOM
+if st.sidebar.button(
+    "🗑️ Clear All History",
+    key="clear_history"
+):
+
+    try:
+
+        # Delete all MongoDB documents
+        collection.delete_many({})
+
+        # Clear selected chat
+        st.session_state.selected_chat = None
+
+        # Clear current session messages
+        st.session_state.messages = []
+
+        st.sidebar.success("History Cleared Successfully")
+
+        # Refresh app
+        st.rerun()
+
+    except Exception as e:
+
+        st.sidebar.error(f"Error: {e}")
+
+
