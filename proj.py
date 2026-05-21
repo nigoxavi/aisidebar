@@ -21,7 +21,7 @@ San GenAI
 """, unsafe_allow_html=True)
 
 st.write(
-    "San GenAI is an independent educational AI project for learning purpose. Responses may contain inaccuracies."
+    "San Xavi GenAI is an independent educational AI project for learning purpose. Responses may contain inaccuracies."
 )
 
 # ---------------- LOAD ENV ----------------
