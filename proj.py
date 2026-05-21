@@ -16,7 +16,7 @@ st.markdown("""
     -webkit-text-fill-color: transparent;
     font-size:60px;
 ">
-San GenAI
+San Xavi GenAI
 </h1>
 """, unsafe_allow_html=True)
 
