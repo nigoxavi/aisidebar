@@ -21,13 +21,14 @@ San GenAI
 """, unsafe_allow_html=True)
 
 st.write(
-    "San GenAI is an independent educational AI project for learning purpose. Responses may contain inaccuracies"
+    "San GenAI is an independent educational AI project for learning purpose. Responses may contain inaccuracies."
 )
 
-# ---------------- MONGODB ----------------
-from pymongo import MongoClient
-import certifi
-import streamlit as st
+# ---------------- LOAD ENV ----------------
+
+load_dotenv()
+
+# ---------------- MONGODB CONNECTION ----------------
 
 MONGO_URI = st.secrets["MONGO_URI"]
 
@@ -39,18 +40,19 @@ try:
         serverSelectionTimeoutMS=30000
     )
 
-    # Force connection test (VERY IMPORTANT)
+    # Test MongoDB connection
     client.admin.command("ping")
 
     db = client["aidatabase1"]
     collection = db["search_history"]
 
-   # st.success("✅ MongoDB Connected Successfully!")
+    # st.success("MongoDB Connected Successfully!")
 
 except Exception as e:
-    st.error("❌ MongoDB Connection Failed")
+    st.error("MongoDB Connection Failed")
     st.exception(e)
-# ---------------- MONGODB ----------------
+    st.stop()
+
 # ---------------- SESSION STATE ----------------
 
 if "messages" not in st.session_state:
@@ -65,19 +67,23 @@ st.sidebar.title("Search History")
 
 all_chats = collection.find().sort("_id", -1)
 
-for chat in all_chats:
+for idx, chat in enumerate(all_chats):
 
     question = chat.get("question", "No Question")
     answer = chat.get("answer", "No Answer")
 
-    if st.sidebar.button(question):
+    # UNIQUE BUTTON KEY
+    if st.sidebar.button(
+        question,
+        key=f"chat_button_{chat['_id']}"
+    ):
 
         st.session_state.selected_chat = {
             "question": question,
             "answer": answer
         }
 
-# ---------------- SHOW SELECTED HISTORY ----------------
+# ---------------- SHOW SELECTED CHAT ----------------
 
 if st.session_state.selected_chat:
 
@@ -89,9 +95,7 @@ if st.session_state.selected_chat:
         st.session_state.selected_chat["answer"]
     )
 
-# ---------------- LOAD ENV ----------------
-
-load_dotenv()
+# ---------------- GROQ API ----------------
 
 api_key = st.secrets["GROQ_API_KEY"]
 
@@ -102,7 +106,7 @@ llm = ChatGroq(
     model="llama-3.3-70b-versatile"
 )
 
-# ---------------- DISPLAY CURRENT SESSION CHAT ----------------
+# ---------------- DISPLAY CURRENT SESSION ----------------
 
 for msg in st.session_state.messages:
 
@@ -114,7 +118,7 @@ for msg in st.session_state.messages:
 
 # ---------------- USER INPUT ----------------
 
-user_input = st.chat_input("Ask anything ...")
+user_input = st.chat_input("Ask anything...")
 
 # ---------------- PROCESS INPUT ----------------
 
@@ -124,7 +128,7 @@ if user_input:
     st.chat_message("user").write(user_input)
 
     # Save user message
-    st.session_state["messages"].append(
+    st.session_state.messages.append(
         HumanMessage(content=user_input)
     )
 
@@ -132,22 +136,22 @@ if user_input:
 
         try:
 
-            # REAL LLM RESPONSE
+            # LLM RESPONSE
             response = llm.invoke(
-                st.session_state["messages"]
+                st.session_state.messages
             )
 
             ai_reply = response.content
 
-            # Show AI response
+            # Show assistant response
             st.chat_message("assistant").write(ai_reply)
 
-            # Save assistant message
-            st.session_state["messages"].append(
+            # Save assistant response
+            st.session_state.messages.append(
                 AIMessage(content=ai_reply)
             )
 
-            # SAVE REAL RESPONSE TO MONGODB
+            # SAVE TO MONGODB
             collection.insert_one({
                 "question": user_input,
                 "answer": ai_reply
